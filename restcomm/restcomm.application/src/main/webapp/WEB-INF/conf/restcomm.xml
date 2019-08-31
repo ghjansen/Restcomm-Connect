@@ -402,6 +402,13 @@
 				default value is 14400 seconds/(4 hours).
 				Please provide value in seconds -->
 		<conference-timeout>14400</conference-timeout>
+		<!-- Configuration for the Resource Filter Service -->
+		<resourceFilter>
+			<!-- Number of outbound voice calls allowed (integer >= 0) -->
+			<outboundVoiceCallsQuota></outboundVoiceCallsQuota>
+			<!-- Period (in hours) in which the number of outbound voice calls is allowed (integer > 0) -->
+			<outboundVoiceCallsPeriod></outboundVoiceCallsPeriod>
+		</resourceFilter>
 	</runtime-settings>
 
 	<!--Bandwidth Provisioning API Configuration class: BandwidthNumberProvisioningManager

@@ -21,8 +21,12 @@
 package org.restcomm.connect.application;
 
 import javax.servlet.ServletContext;
+
+import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
+import org.restcomm.connect.core.service.api.ResourceFilterService;
+import org.restcomm.connect.core.service.call.ResourceFilterImpl;
 import org.restcomm.connect.core.service.number.NumberSelectorServiceImpl;
 import org.restcomm.connect.core.service.profile.ProfileServiceImpl;
 import org.restcomm.connect.dao.DaoManager;
@@ -37,6 +41,7 @@ public class RestcommConnectServiceProvider {
     // core services
     private NumberSelectorService numberSelector;
     private ProfileService profileService;
+    private ResourceFilterService resourceFilter;
 
     public static RestcommConnectServiceProvider getInstance() {
         if (instance == null) {
@@ -46,15 +51,19 @@ public class RestcommConnectServiceProvider {
     }
 
     /**
-     * @param daoManager
+     *
+     * @param ctx
      */
     public void startServices(ServletContext ctx) {
         DaoManager daoManager = (DaoManager) ctx.getAttribute(DaoManager.class.getName());
+        Configuration cfg = (Configuration) ctx.getAttribute(Configuration.class.getName());
         // core services initialization
         this.numberSelector = new NumberSelectorServiceImpl(daoManager.getIncomingPhoneNumbersDao());
         ctx.setAttribute(NumberSelectorService.class.getName(), numberSelector);
         this.profileService = new ProfileServiceImpl(daoManager);
         ctx.setAttribute(ProfileService.class.getName(), profileService);
+        this.resourceFilter = new ResourceFilterImpl(daoManager, cfg);
+        ctx.setAttribute(ResourceFilterService.class.getName(), resourceFilter);
     }
 
     /**
@@ -69,6 +78,10 @@ public class RestcommConnectServiceProvider {
      */
     public ProfileService provideProfileService() {
         return profileService;
+    }
+
+    public ResourceFilterService provideResourceFilterService(){
+        return resourceFilter;
     }
 
 }
