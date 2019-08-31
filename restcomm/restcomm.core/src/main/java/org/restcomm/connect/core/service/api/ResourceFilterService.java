@@ -19,21 +19,26 @@
  */
 package org.restcomm.connect.core.service.api;
 
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 
 public interface ResourceFilterService {
 
     /**
-     * Evaluates if the informed {@link Account} is still under the <p/>
+     * Evaluates if the informed {@link Sid} is still under the <p/>
      * quota established for outbound voice calls, inside a given <p/>
      * period of time, according with the resource filter configuration.
-     * @param account
-     * @return true if the account informed still under quota <p/>
-     * for outbound voice calls (i.e. sum of outbound voice calls in <p/>
-     * a period is less than the limit); false if the account informed <p/>
+     * @param accountId
+     * @return true if the resource filter is active and the account <p/>
+     * informed still under quota for outbound voice calls <p/>
+     * (i.e. sum of outbound voice calls in a period is less than the limit), <p/>
+     * or if the resource filter is inactive;
+     * false if the resource filter is active and the account informed <p/>
      * is over quota for outbound voice calls (i.e. sum of outbound <p/>
-     * voice calls in a period is greater or equals to the limit).
+     * voice calls in a period is greater or equals to the limit), or <p/>
+     * if the resource filter is active but failed while evaluating outbound <p/>
+     * voice calls.
      */
-    boolean isOutboundVoiceCallUnderQuota(Account account);
+    boolean isOutboundVoiceCallUnderQuota(Sid accountId);
 
 }

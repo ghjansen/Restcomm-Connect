@@ -69,6 +69,12 @@
 		<if test="endTime != null">
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
+		<if test="direction != null">
+			AND direction like #{direction}
+		</if>
+		<if test="age != null">
+			AND date_created >= DATE_SUB(NOW(), INTERVAL #{age} HOUR)
+		</if>
 	</select>
   
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->

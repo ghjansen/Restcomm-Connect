@@ -45,6 +45,8 @@ public class CallDetailRecordFilter {
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
+    private final String direction;
+    private final Integer age;  // a period in hours to be subtracted from current time, with the result as lower limit for date_created
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
@@ -53,6 +55,11 @@ public class CallDetailRecordFilter {
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
+        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,instanceId,null,null);
+    }
+
+    public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, String direction, Integer age) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -88,6 +95,16 @@ public class CallDetailRecordFilter {
             this.instanceid = instanceId;
         } else {
             this.instanceid = null;
+        }
+        if (direction != null) {
+            this.direction = direction;
+        } else {
+            this.direction = null;
+        }
+        if (age != null) {
+            this.age = age;
+        } else {
+            this.age = null;
         }
     }
 
@@ -136,4 +153,12 @@ public class CallDetailRecordFilter {
     }
 
     public String getInstanceid() { return instanceid; }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public Integer getAge(){
+        return age;
+    }
 }

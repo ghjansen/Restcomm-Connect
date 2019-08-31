@@ -403,12 +403,12 @@
 				Please provide value in seconds -->
 		<conference-timeout>14400</conference-timeout>
 		<!-- Configuration for the Resource Filter Service -->
-		<resourceFilter>
+		<resource-filter>
 			<!-- Number of outbound voice calls allowed (integer >= 0) -->
-			<outboundVoiceCallsQuota></outboundVoiceCallsQuota>
+			<outbound-voice-calls-quota>0</outbound-voice-calls-quota>
 			<!-- Period (in hours) in which the number of outbound voice calls is allowed (integer > 0) -->
-			<outboundVoiceCallsPeriod></outboundVoiceCallsPeriod>
-		</resourceFilter>
+			<outbound-voice-calls-period>0</outbound-voice-calls-period>
+		</resource-filter>
 	</runtime-settings>
 
 	<!--Bandwidth Provisioning API Configuration class: BandwidthNumberProvisioningManager

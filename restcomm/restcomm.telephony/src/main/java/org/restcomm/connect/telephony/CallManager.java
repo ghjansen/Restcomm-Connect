@@ -76,6 +76,7 @@ import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
+import org.restcomm.connect.core.service.api.ResourceFilterService;
 import org.restcomm.connect.core.service.number.api.NumberSelectionResult;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -176,6 +177,7 @@ public final class CallManager extends RestcommUntypedActor {
     private final DaoManager storage;
     private final ActorRef monitoring;
     private final NumberSelectorService numberSelector;
+    private final ResourceFilterService resourceFilter;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -269,6 +271,7 @@ public final class CallManager extends RestcommUntypedActor {
         this.sipFactory = factory;
         this.storage = storage;
         numberSelector = (NumberSelectorService)context.getAttribute(NumberSelectorService.class.getName());
+        resourceFilter = (ResourceFilterService)context.getAttribute(ResourceFilterService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         SipURI outboundIntf = outboundInterface("udp");
@@ -1852,6 +1855,7 @@ public final class CallManager extends RestcommUntypedActor {
 
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
+        if(!outboundQuotaAllowed(request,sender)) return;
         ExtensionController ec = ExtensionController.getInstance();
         ExtensionResponse extRes = ec.executePreOutboundAction(request, this.extensions);
         switch (request.type()) {
@@ -2203,6 +2207,18 @@ public final class CallManager extends RestcommUntypedActor {
         }
         call.tell(init, self);
         return call;
+    }
+
+    private boolean outboundQuotaAllowed(final CreateCall request, final ActorRef sender){
+        boolean allowed = resourceFilter.isOutboundVoiceCallUnderQuota(request.getAccountId());
+        if(!allowed){
+            //outbound voice call over quota
+            String errMsg = "Outbound voice call over quota for accoundId: " + request.getAccountSid();
+            logger.warning(errMsg);
+            sendNotification(request.accountId(), errMsg, 0, "error", true);
+            sender.tell(new CallManagerResponse<ActorRef>(new OutboundCallException(errMsg), request), self());
+        }
+        return allowed;
     }
 
     public void cancel(final Object message) throws IOException {

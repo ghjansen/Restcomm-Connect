@@ -21,9 +21,13 @@ package org.restcomm.connect.core.service.call;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.ResourceFilterService;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
+
+import java.text.ParseException;
 
 public class ResourceFilterImpl implements ResourceFilterService {
 
@@ -57,9 +61,21 @@ public class ResourceFilterImpl implements ResourceFilterService {
     }
 
     @Override
-    public boolean isOutboundVoiceCallUnderQuota(final Account account) {
+    public boolean isOutboundVoiceCallUnderQuota(final Sid accountId) {
         if(active){
-            return true;
+            try {
+                CallDetailRecordFilter cdrf = new CallDetailRecordFilter(String.valueOf(accountId),null,null,null,null,null,null,null,null,null,null,null,"outbound-api",outboundVoiceCallsPeriod);
+                Integer totalAccount = daoManager.getCallDetailRecordsDao().getTotalCallDetailRecords(cdrf);
+                if(totalAccount < outboundVoiceCallsQuota){
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (ParseException e) {
+                logger.error("Resource Filter failed while evaluating outbound voice calls quota. " +
+                        "Over quota assumed as default", e);
+                return false;
+            }
         } else {
             return true;
         }
