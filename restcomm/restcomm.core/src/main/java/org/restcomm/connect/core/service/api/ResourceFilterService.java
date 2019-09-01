@@ -20,7 +20,6 @@
 package org.restcomm.connect.core.service.api;
 
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
 
 public interface ResourceFilterService {
 
