@@ -24,7 +24,6 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.ResourceFilterService;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 
 import java.text.ParseException;
@@ -44,14 +43,14 @@ public class ResourceFilterImpl implements ResourceFilterService {
 
     private void loadOutboundVoiceCallConfiguration(final Configuration configuration){
         String configQuota = configuration.subset("runtime-settings")
-                .subset("resourceFilter")
-                .getString("outboundVoiceCallsQuota", "");
+                .subset("resource-filter")
+                .getString("outbound-voice-calls-quota", "");
         String configPeriod = configuration.subset("runtime-settings")
-                .subset("resourceFilter")
-                .getString("outboundVoiceCallsPeriod", "");
+                .subset("resource-filter")
+                .getString("outbound-voice-calls-period", "");
         if(!configQuota.isEmpty() && !configPeriod.isEmpty()){
-            Integer quota = Integer.getInteger(configQuota);
-            Integer period = Integer.getInteger(configPeriod);
+            Integer quota = Integer.parseInt(configQuota);
+            Integer period = Integer.parseInt(configPeriod);
             if(quota >= 0 && period > 0){
                 outboundVoiceCallsQuota = quota;
                 outboundVoiceCallsPeriod = period;

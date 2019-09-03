@@ -73,7 +73,7 @@
 			AND direction like #{direction}
 		</if>
 		<if test="age != null">
-			AND date_created >= DATE_SUB(NOW(), INTERVAL #{age} HOUR)
+			AND date_created >= DATE_SUB(NOW(),INTERVAL ${age} HOUR)
 		</if>
 	</select>
   

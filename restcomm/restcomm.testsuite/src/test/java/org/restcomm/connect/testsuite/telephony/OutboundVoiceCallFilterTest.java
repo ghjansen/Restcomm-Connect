@@ -25,21 +25,26 @@ import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(Arquillian.class)
 public class OutboundVoiceCallFilterTest {
@@ -64,13 +69,13 @@ public class OutboundVoiceCallFilterTest {
     private SipStack bobSipStack;
     private SipPhone bobPhone;
     private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String bobContact = "sip:bob@127.0.0.1" + bobPort;
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
     //alice resources
     private static SipStackTool tool2;
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
     private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact = "sip:alice@127.0.0.1" + alicePort;
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -96,9 +101,31 @@ public class OutboundVoiceCallFilterTest {
         if(aliceSipStack != null) aliceSipStack.dispose();
     }
 
+    @Deployment(name = "OutboundVoiceCallFilterTest", managed = true, testable = false)
+    public static WebArchive createWebArchiveNoGw() {
+        logger.info("Packing Test App");
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5090", String.valueOf(bobPort));
+        replacements.put("5091", String.valueOf(alicePort));
+
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm-outboundFilter.xml", "restcomm.script_OutboundFilter", replacements);
+    }
+
+    public static void reconfigurePorts() {
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+            dialRestcomm = "sip:0001@" + restcommContact;
+        }
+    }
+
     private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client></Dial></Response>";
     @Test
-    public void testOutboudVoiceCallFilterLowestLimit() throws ParseException {
+    public void testOutboudVoiceCallFilter() throws ParseException, InterruptedException {
         stubFor(get(urlPathEqualTo("/0001"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -112,13 +139,55 @@ public class OutboundVoiceCallFilterTest {
         SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
 
-        //bob calls app
+        //bob calls 0001 app
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        int response = bobCall.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.RINGING);
-        
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        //alice receives bob's call
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+        Thread.sleep(3000);
+
+        //bob hangup
+        bobCall.disconnect();
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        assertTrue(aliceCall.respondToDisconnect());
+
+        //bob calls again
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        //but as bob already used outbound quota, alice will not receive any call
+        assertFalse(aliceCall.waitForIncomingCall(30 * 1000));
+
+        bobCall.disconnect();
     }
 }

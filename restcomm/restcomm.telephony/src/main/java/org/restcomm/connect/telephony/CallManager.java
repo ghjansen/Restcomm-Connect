@@ -2216,7 +2216,7 @@ public final class CallManager extends RestcommUntypedActor {
             String errMsg = "Outbound voice call over quota for accoundId: " + request.getAccountSid();
             logger.warning(errMsg);
             sendNotification(request.accountId(), errMsg, 0, "error", true);
-            sender.tell(new CallManagerResponse<ActorRef>(new OutboundCallException(errMsg), request), self());
+            sender.tell(new StopInterpreter(), self());
         }
         return allowed;
     }
