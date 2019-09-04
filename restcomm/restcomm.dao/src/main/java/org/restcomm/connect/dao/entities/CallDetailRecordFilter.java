@@ -52,17 +52,19 @@ public class CallDetailRecordFilter {
     private final Sorting.Direction sortByStatus;
     private final Sorting.Direction sortByDuration;
     private final Sorting.Direction sortByPrice;
+    private final String direction;
+    private final Integer age;  // a period in hours to be subtracted from current time, with the result as lower limit for date_created
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
         this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit, offset, null, null,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
     }
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, Sorting.Direction sortByDate,
                                   Sorting.Direction sortByFrom, Sorting.Direction sortByTo, Sorting.Direction sortByDirection, Sorting.Direction sortByStatus, Sorting.Direction sortByDuration,
-                                  Sorting.Direction sortByPrice) throws ParseException {
+                                  Sorting.Direction sortByPrice, String direction, Integer age) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -107,6 +109,9 @@ public class CallDetailRecordFilter {
         this.sortByStatus = sortByStatus;
         this.sortByDuration = sortByDuration;
         this.sortByPrice = sortByPrice;
+
+        this.direction = direction;
+        this.age = age;
     }
 
     public String getSid() {
@@ -163,6 +168,14 @@ public class CallDetailRecordFilter {
     public Sorting.Direction getSortByDuration() { return sortByDuration; }
     public Sorting.Direction getSortByPrice() { return sortByPrice; }
 
+    public String getDirection() {
+        return direction;
+    }
+
+    public Integer getAge(){
+        return age;
+    }
+
 
     public static final class Builder {
         private String accountSid = null;
@@ -182,6 +195,8 @@ public class CallDetailRecordFilter {
         private Sorting.Direction sortByStatus = null;
         private Sorting.Direction sortByDuration = null;
         private Sorting.Direction sortByPrice = null;
+        private String direction = null;
+        private Integer age = null;
 
         private Integer limit = null;
         private Integer offset = null;
@@ -210,7 +225,9 @@ public class CallDetailRecordFilter {
                     sortByDirection,
                     sortByStatus,
                     sortByDuration,
-                    sortByPrice);
+                    sortByPrice,
+                    direction,
+                    age);
         }
 
         // Filters
@@ -252,6 +269,14 @@ public class CallDetailRecordFilter {
         }
         public Builder byInstanceId(String instanceid) {
             this.instanceid = instanceid;
+            return this;
+        }
+        public Builder byDirection(String direction) {
+            this.direction = direction;
+            return this;
+        }
+        public Builder byAge(Integer age){
+            this.age = age;
             return this;
         }
 

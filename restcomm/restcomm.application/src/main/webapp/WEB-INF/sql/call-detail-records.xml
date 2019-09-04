@@ -45,31 +45,37 @@
             </if>
         </if>
 
-        <if test="instanceid != null">
-            AND "instanceid" like #{instanceid}
-        </if>
-        <if test="recipient != null">
-            AND "recipient" like #{recipient}
-        </if>
-        <if test="sender != null">
-            AND "sender" like #{sender}
-        </if>
-        <if test="status != null">
-            AND "status" like #{status}
-        </if>
-        <if test="parentCallSid != null">
-            AND "parent_call_sid" like #{parentCallSid}
-        </if>
-        <if test="conferenceSid != null">
-            AND "conference_sid" like #{conferenceSid}
-        </if>
-        <!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
-        <if test="startTime != null">
-            AND "start_time" &gt;= #{startTime}
-        </if>
-        <if test="endTime != null">
-            AND "end_time" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
-        </if>
+		<if test="instanceid != null">
+			AND "instanceid" like #{instanceid}
+		</if>
+		<if test="recipient != null">
+			AND "recipient" like #{recipient}
+		</if>
+		<if test="sender != null">
+			AND "sender" like #{sender}
+		</if>
+		<if test="status != null">
+			AND "status" like #{status}
+		</if>
+		<if test="parentCallSid != null">
+			AND "parent_call_sid" like #{parentCallSid}
+		</if>
+		<if test="conferenceSid != null">
+			AND "conference_sid" like #{conferenceSid}
+		</if>
+		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+		<if test="startTime != null">
+		    AND "start_time" &gt;= #{startTime}
+		</if>
+		<if test="endTime != null">
+			AND "end_time" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+		</if>
+		<if test="direction != null">
+			AND "direction" like #{direction}
+		</if>
+		<if test="age != null">
+			AND "date_created" >= DATE_SUB(NOW(),INTERVAL ${age} HOUR)
+		</if>
 
     </select>
 

@@ -148,8 +148,24 @@ configMonitoring(){
      fi
 }
 
+configResourceFilter(){
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    if [[ -z $OUTBOUND_VOICE_CALLS_QUOTA || -z $OUTBOUND_VOICE_CALLS_PERIOD ]]; then
+            echo 'One or more variables are undefined'
+            echo  'Not possible to continue with Resource Filter configuration'
+
+    else
+            echo "OUTBOUND_VOICE_CALLS_QUOTA $OUTBOUND_VOICE_CALLS_QUOTA OUTBOUND_VOICE_CALLS_PERIOD $OUTBOUND_VOICE_CALLS_PERIOD"
+            sed -i "/<resource-filter>/ {
+            N; s|<outbound-voice-calls-quota.*>.*|<outbound-voice-calls-quota>${OUTBOUND_VOICE_CALLS_QUOTA}</outbound-voice-calls-quota>|
+            N; s|<outbound-voice-calls-period.*>.*|<outbound-voice-calls-period>${OUTBOUND_VOICE_CALLS_PERIOD}</outbound-voice-calls-period>|
+            }" $FILE
+    fi
+}
+
 # MAIN
 configS3Bucket
 initUserPassword
 configSMTP
 configMonitoring
+configResourceFilter
